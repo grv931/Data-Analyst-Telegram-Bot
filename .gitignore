@@ -1,0 +1,4 @@
+.env
+__pycache__/
+tds-p1-t2-2026-telegram-bot-main/
+*.pyc
