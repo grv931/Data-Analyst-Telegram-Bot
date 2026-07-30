@@ -5,7 +5,20 @@ from openai import OpenAI
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 from dotenv import load_dotenv
+import threading
+import http.server
+import socketserver
+
 load_dotenv()
+
+def start_web_server():
+    PORT = int(os.environ.get("PORT", 8000))
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        print(f"Web server running on port {PORT}")
+        httpd.serve_forever()
+
+threading.Thread(target=start_web_server, daemon=True).start()
 
 # --- fill these in with your own values ---
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -24,8 +37,6 @@ def log_event(event: dict):
     event["timestamp"] = time.time()
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps(event) + "\n")
-    # Automatically push the log file to GitHub so the raw URL stays updated
-    os.system('git add run.jsonl && git commit -m "update log" && git push')
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
