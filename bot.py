@@ -75,10 +75,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # never sees a malformed reply.
     try:
         parsed = json.loads(reply_text)
-    except json.JSONDecodeError:
+        if not isinstance(parsed, dict):
+            raise ValueError("Not a dict")
+    except (json.JSONDecodeError, ValueError):
         # Model added extra text — try to pull out just the {...} part.
         start, end = reply_text.find("{"), reply_text.rfind("}")
-        parsed = json.loads(reply_text[start:end + 1])
+        if start != -1 and end != -1 and end > start:
+            try:
+                parsed = json.loads(reply_text[start:end + 1])
+            except json.JSONDecodeError:
+                parsed = {"fallback_response": reply_text}
+        else:
+            parsed = {"fallback_response": reply_text}
+    
     parsed["log_url"] = LOG_URL
     final_reply = json.dumps(parsed)
 
